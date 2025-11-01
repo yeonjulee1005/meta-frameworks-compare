@@ -1,0 +1,159 @@
+name: Performance Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  benchmark-next16:
+    name: Next16 Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: next16/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./next16
+        run: npm ci
+
+      - name: Build Next16
+        working-directory: ./next16
+        run: npm run build
+
+      - name: Bundle Analysis
+        working-directory: ./next16
+        run: npm run analyze
+        continue-on-error: true
+
+      - name: Start Next16 server
+        working-directory: ./next16
+        run: npm start &
+        env:
+          PORT: 3008
+
+      - name: Wait for server
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3008; do sleep 1; done' || exit 1
+
+      - name: Install Chrome for Lighthouse
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable || sudo apt-get install -y chromium-browser
+
+      - name: Run Autocannon
+        working-directory: ./next16
+        run: npm run benchmark:server || true
+        continue-on-error: true
+
+      - name: Run Lighthouse CI
+        working-directory: ./next16
+        run: npm run benchmark:lighthouse-ci || true
+        continue-on-error: true
+        env:
+          CI: true
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: next16-benchmark-results
+          path: |
+            next16/benchmark-reports/**
+            next16/.next/analyze/**
+
+  benchmark-nuxt4:
+    name: Nuxt4 Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: nuxt4/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./nuxt4
+        run: npm ci
+
+      - name: Build Nuxt4
+        working-directory: ./nuxt4
+        run: npm run build
+
+      - name: Start Nuxt4 preview server
+        working-directory: ./nuxt4
+        run: npm run preview &
+        env:
+          PORT: 3009
+
+      - name: Wait for server
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3009; do sleep 1; done' || exit 1
+
+      - name: Install Chrome for Lighthouse
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable || sudo apt-get install -y chromium-browser
+
+      - name: Run Autocannon
+        working-directory: ./nuxt4
+        run: npm run benchmark:server || true
+        continue-on-error: true
+
+      - name: Run Lighthouse CI
+        working-directory: ./nuxt4
+        run: npm run benchmark:lighthouse-ci || true
+        continue-on-error: true
+        env:
+          CI: true
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nuxt4-benchmark-results
+          path: nuxt4/benchmark-reports/**
+
+  compare-results:
+    name: Compare Results
+    needs: [benchmark-next16, benchmark-nuxt4]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Next16 results
+        uses: actions/download-artifact@v4
+        with:
+          name: next16-benchmark-results
+          path: ./artifacts/next16
+
+      - name: Download Nuxt4 results
+        uses: actions/download-artifact@v4
+        with:
+          name: nuxt4-benchmark-results
+          path: ./artifacts/nuxt4
+
+      - name: Generate comparison report
+        run: |
+          echo "# Performance Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next16" >> $GITHUB_STEP_SUMMARY
+          echo "- Bundle analysis and server benchmark completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Nuxt4" >> $GITHUB_STEP_SUMMARY
+          echo "- Server benchmark completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check artifacts for detailed reports." >> $GITHUB_STEP_SUMMARY
+

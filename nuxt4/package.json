@@ -1,21 +1,35 @@
 {
   "name": "nuxt4",
-  "type": "module",
+  "author": "Dewdew",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --port 3009",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "preview": "nuxt preview --port 3009",
+    "postinstall": "nuxt prepare",
+    "cleanup": "nuxt cleanup",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "benchmark:server": "node scripts/autocannon.js",
+    "benchmark:lighthouse": "lighthouse http://localhost:3009 --output html --output-path ./benchmark-reports/lighthouse-nuxt4.html --chrome-flags=\"--headless\"",
+    "benchmark:inspect": "node --inspect --max-old-space-size=4096 node_modules/.bin/nuxt preview",
+    "benchmark:lighthouse-ci": "lhci autorun"
   },
   "dependencies": {
+    "@lhci/cli": "^0.14.0",
     "@nuxt/eslint": "1.10.0",
     "@nuxt/ui": "4.1.0",
+    "autocannon": "^7.12.0",
     "eslint": "^9.0.0",
+    "lighthouse": "^13.0.0",
     "nuxt": "^4.2.0",
     "typescript": "^5.6.3",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }
