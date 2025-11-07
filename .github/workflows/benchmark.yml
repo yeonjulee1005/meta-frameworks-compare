@@ -19,11 +19,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: next16/package-lock.json
+          cache-dependency-path: next16/package.json
 
       - name: Install dependencies
         working-directory: ./next16
-        run: npm ci
+        run: npm install
 
       - name: Build Next16
         working-directory: ./next16
@@ -81,11 +81,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: nuxt4/package-lock.json
+          cache-dependency-path: nuxt4/package.json
 
       - name: Install dependencies
         working-directory: ./nuxt4
-        run: npm ci
+        run: npm install
 
       - name: Build Nuxt4
         working-directory: ./nuxt4
