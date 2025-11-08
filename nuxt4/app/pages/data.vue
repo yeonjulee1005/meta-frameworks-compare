@@ -6,7 +6,10 @@ useSeoMeta({
 
 const counter = useState('counter', () => 0);
 
-const { data, pending, error, refresh } = await useFetch('/api/data');
+// SSR에서 HTTP 요청을 명시적으로 하도록 설정
+const { data, pending, error, refresh } = await useFetch('/api/data', {
+  server: true,
+});
 </script>
 
 <template>

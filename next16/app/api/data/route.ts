@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   // 시뮬레이션을 위한 약간의 지연
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // await new Promise(resolve => setTimeout(resolve, 500));
 
   return NextResponse.json({
     message: '서버에서 가져온 데이터입니다',

@@ -19,6 +19,15 @@ export default defineNuxtConfig({
     storage: {
     },
     logLevel: process.env.NODE_ENV === 'production' ? 0 : 4,
+    // 동시 요청 처리 최적화
+    routeRules: {
+      '/api/**': {
+        cors: true,
+        headers: { 'cache-control': 's-maxage=0' },
+      },
+    },
+    // 서버 성능 최적화
+    timing: false,
   },
   build: {
     analyze: false,
